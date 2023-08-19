@@ -7,16 +7,22 @@ const User = require('../models/user');
 router.post('/register', async (req, res) => {
   const { username, password } = req.body;
 
-  const hashedPassword = await bcrypt.hash(password, 10);
-
   try {
-    const user = new User({ username, password: hashedPassword });
+    const existingUser = await User.findOne({ username });
+
+    if (existingUser) {
+      return res.status(400).json({ message: 'Username already exists' });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const user = new User({ username, password: password });
     await user.save();
     res.status(201).json({ message: 'User registered successfully' });
   } catch (error) {
     res.status(500).json({ message: 'An error occurred' });
   }
 });
+
 
 router.post('/login', async (req, res) => {
   const { username, password } = req.body;
